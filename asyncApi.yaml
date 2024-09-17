@@ -6,30 +6,8 @@ info:
   description: This is a generic Event Driven API definition that sends B events.
 defaultContentType: application/json
 
-servers:
-  wsServer:
-    url: 'wss://example.com/ws'
-    protocol: 'wss'
-  kafkaServer:
-    url: 'kafka://localhost:9092'
-    protocol: 'kafka'
-  amqpServer:
-    url: 'amqp://localhost:5672'
-    protocol: 'amqp'
-
 channels:
-  B:
-    bindings:
-      ws:
-        method: POST
-        server: wsServer
-      amqp:
-        exchange:
-          name: 'events'
-          type: 'topic'
-        queue:
-          name: 'bQueue'
-          durable: true
+  GUID_CHANGE:
     subscribe:
       message:
         bindings:
@@ -37,18 +15,23 @@ channels:
             key:
               type: string
               description: Timestamp of event as milliseconds since 1st Jan 1970
+        '$ref': '#/components/messages/GUID_CHANGE'
+        
+  CLIENT_SEARCH:
+    publish:
+      message:
+        bindings:
           amqp:
             routingKey: 'b.routing.key'
-        '$ref': '#/components/messages/BMsg'
 
 components:
   messages:
-    BMsg:
+    GUID_CHANGE:
       payload:
         '$ref': '#/components/schemas/BType'
       examples:
         - name: Reference
-          payload: {"a":1}
+          payload: { "a": 1 }
   schemas:
     BType:
       type: object
