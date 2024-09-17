@@ -1,94 +1,57 @@
-asyncapi: '2.6.0'
+asyncapi: '2.4.0'
+id: 'urn:io.microcks.generic.A-1'
 info:
-  title: 'AMQP and Kafka Integration'
-  version: '1.0.0'
-  description: 'API specification with two AMQP queues for request/response and one Kafka topic for broadcasting events.'
-  license:
-    name: 'Apache 2.0'
-    url: 'https://www.apache.org/licenses/LICENSE-2.0.html'
+  title: A
+  version: '1'
+  description: This is a generic Event Driven API definition that sends B events.
+defaultContentType: application/json
 
 servers:
-  amqpServer:
-    url: 'amqp://localhost:5672'
-    protocol: 'amqp'
-    description: 'AMQP broker for request/response queues'
+  wsServer:
+    url: 'wss://example.com/ws'
+    protocol: 'wss'
   kafkaServer:
     url: 'kafka://localhost:9092'
     protocol: 'kafka'
-    description: 'Kafka broker for broadcasting events'
+  amqpServer:
+    url: 'amqp://localhost:5672'
+    protocol: 'amqp'
 
 channels:
-  amqpRequestQueue:
-    description: 'Queue for sending requests'
-    servers:
-      - amqpServer
+  B:
+    bindings:
+      ws:
+        method: POST
+        server: wsServer
+      amqp:
+        exchange:
+          name: 'events'
+          type: 'topic'
+        queue:
+          name: 'bQueue'
+          durable: true
     subscribe:
-      summary: 'Consumes requests from the queue'
-      operationId: 'receiveRequest'
       message:
-        $ref: '#/components/messages/RequestMessage'
-
-  amqpResponseQueue:
-    description: 'Queue for sending responses'
-    servers:
-      - amqpServer
-    publish:
-      summary: 'Produces responses to the queue'
-      operationId: 'sendResponse'
-      message:
-        $ref: '#/components/messages/ResponseMessage'
-
-  kafkaTopic:
-    description: 'Kafka topic for broadcasting events'
-    servers:
-      - kafkaServer
-    publish:
-      summary: 'Publishes events to Kafka topic'
-      operationId: 'broadcastEvent'
-      message:
-        $ref: '#/components/messages/KafkaMessage'
+        bindings:
+          kafka:
+            key:
+              type: string
+              description: Timestamp of event as milliseconds since 1st Jan 1970
+          amqp:
+            routingKey: 'b.routing.key'
+        '$ref': '#/components/messages/BMsg'
 
 components:
   messages:
-    RequestMessage:
-      contentType: 'application/json'
+    BMsg:
       payload:
-        type: 'object'
-        properties:
-          requestId:
-            type: 'string'
-          message:
-            type: 'string'
-          timestamp:
-            type: 'string'
-            format: 'date-time'
-          additionalData:
-            type: 'object'
-    ResponseMessage:
-      contentType: 'application/json'
-      payload:
-        type: 'object'
-        properties:
-          responseId:
-            type: 'string'
-          status:
-            type: 'string'
-          timestamp:
-            type: 'string'
-            format: 'date-time'
-          resultData:
-            type: 'object'
-    KafkaMessage:
-      contentType: 'application/json'
-      payload:
-        type: 'object'
-        properties:
-          eventId:
-            type: 'string'
-          eventType:
-            type: 'string'
-          eventPayload:
-            type: 'object'
-          timestamp:
-            type: 'string'
-            format: 'date-time'
+        '$ref': '#/components/schemas/BType'
+      examples:
+        - name: Reference
+          payload: {"a":1}
+  schemas:
+    BType:
+      type: object
+      properties:
+        a:
+          type: number
