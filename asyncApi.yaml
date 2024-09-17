@@ -1,0 +1,94 @@
+asyncapi: '2.6.0'
+info:
+  title: 'AMQP and Kafka Integration'
+  version: '1.0.0'
+  description: 'API specification with two AMQP queues for request/response and one Kafka topic for broadcasting events.'
+  license:
+    name: 'Apache 2.0'
+    url: 'https://www.apache.org/licenses/LICENSE-2.0.html'
+
+servers:
+  amqpServer:
+    url: 'amqp://localhost:5672'
+    protocol: 'amqp'
+    description: 'AMQP broker for request/response queues'
+  kafkaServer:
+    url: 'kafka://localhost:9092'
+    protocol: 'kafka'
+    description: 'Kafka broker for broadcasting events'
+
+channels:
+  amqpRequestQueue:
+    description: 'Queue for sending requests'
+    servers:
+      - amqpServer
+    subscribe:
+      summary: 'Consumes requests from the queue'
+      operationId: 'receiveRequest'
+      message:
+        $ref: '#/components/messages/RequestMessage'
+
+  amqpResponseQueue:
+    description: 'Queue for sending responses'
+    servers:
+      - amqpServer
+    publish:
+      summary: 'Produces responses to the queue'
+      operationId: 'sendResponse'
+      message:
+        $ref: '#/components/messages/ResponseMessage'
+
+  kafkaTopic:
+    description: 'Kafka topic for broadcasting events'
+    servers:
+      - kafkaServer
+    publish:
+      summary: 'Publishes events to Kafka topic'
+      operationId: 'broadcastEvent'
+      message:
+        $ref: '#/components/messages/KafkaMessage'
+
+components:
+  messages:
+    RequestMessage:
+      contentType: 'application/json'
+      payload:
+        type: 'object'
+        properties:
+          requestId:
+            type: 'string'
+          message:
+            type: 'string'
+          timestamp:
+            type: 'string'
+            format: 'date-time'
+          additionalData:
+            type: 'object'
+    ResponseMessage:
+      contentType: 'application/json'
+      payload:
+        type: 'object'
+        properties:
+          responseId:
+            type: 'string'
+          status:
+            type: 'string'
+          timestamp:
+            type: 'string'
+            format: 'date-time'
+          resultData:
+            type: 'object'
+    KafkaMessage:
+      contentType: 'application/json'
+      payload:
+        type: 'object'
+        properties:
+          eventId:
+            type: 'string'
+          eventType:
+            type: 'string'
+          eventPayload:
+            type: 'object'
+          timestamp:
+            type: 'string'
+            format: 'date-time'
